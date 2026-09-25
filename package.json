@@ -7,7 +7,7 @@
     "backEnd"
   ],
   "scripts": {
-    "build": "cd frontEnd && npm install --include=dev && npm run build && cd .. && mkdir -p public && cp -r frontEnd/.output/public/* public/"
+    "build": "cd frontEnd && node ./node_modules/vite/bin/vite.js build && node generate-index.js && cd .. && mkdir -p public && cp -r frontEnd/.output/public/* public/"
   },
   "dependencies": {
     "axios": "^1.20.0",
