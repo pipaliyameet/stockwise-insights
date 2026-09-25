@@ -211,18 +211,21 @@ function trainLinearRegression(
   // Compute (X^T * X)
   const XtX: number[][] = Array.from({ length: p }, () => Array(p).fill(0));
   for (let i = 0; i < p; i++) {
+    const rowXtX = XtX[i]!;
     for (let j = 0; j < p; j++) {
       let sum = 0;
       for (let k = 0; k < n; k++) {
-        sum += X_b[k]![i]! * X_b[k]![j]!;
+        const rowK = X_b[k]!;
+        sum += (rowK[i] ?? 0) * (rowK[j] ?? 0);
       }
-      XtX[i]![j] = sum;
+      rowXtX[j] = sum;
     }
   }
 
   // Regularization lambda for matrix invertibility
   for (let i = 0; i < p; i++) {
-    XtX[i]![i] += 1e-4;
+    const row = XtX[i]!;
+    row[i] = (row[i] ?? 0) + 1e-4;
   }
 
   // Invert p x p matrix using Gaussian elimination
@@ -233,7 +236,8 @@ function trainLinearRegression(
   for (let i = 0; i < p; i++) {
     let sum = 0;
     for (let k = 0; k < n; k++) {
-      sum += X_b[k]![i]! * y_train[k]!;
+      const rowK = X_b[k]!;
+      sum += (rowK[i] ?? 0) * (y_train[k] ?? 0);
     }
     Xty[i] = sum;
   }
@@ -242,8 +246,9 @@ function trainLinearRegression(
   const beta: number[] = Array(p).fill(0);
   for (let i = 0; i < p; i++) {
     let sum = 0;
+    const rowInv = inv[i]!;
     for (let j = 0; j < p; j++) {
-      sum += inv[i]![j]! * Xty[j]!;
+      sum += (rowInv[j] ?? 0) * (Xty[j] ?? 0);
     }
     beta[i] = sum;
   }
