@@ -1,0 +1,59 @@
+services:
+  # -------------------------------------------------------------
+  # Service 1: Python ML Microservice (Flask + Scikit-Learn)
+  # -------------------------------------------------------------
+  - type: web
+    name: stockwise-ml
+    runtime: python
+    plan: free
+    rootDir: backEnd/ml
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT ml_server:app
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+
+  # -------------------------------------------------------------
+  # Service 2: Node.js / Express API Backend
+  # -------------------------------------------------------------
+  - type: web
+    name: stockwise-api
+    runtime: node
+    plan: free
+    rootDir: backEnd
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false # Set securely in Render dashboard (MongoDB Atlas connection string)
+      - key: ML_SERVICE_URL
+        fromService:
+          type: web
+          name: stockwise-ml
+          property: url
+      - key: FRONTEND_URL
+        fromService:
+          type: web
+          name: stockwise-frontend
+          property: url
+
+  # -------------------------------------------------------------
+  # Service 3: Frontend UI Application (React + Vite + SSR)
+  # -------------------------------------------------------------
+  - type: web
+    name: stockwise-frontend
+    runtime: node
+    plan: free
+    rootDir: frontEnd
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_API_BASE_URL
+        sync: false # Set to https://<your-stockwise-api-url>.onrender.com/api
