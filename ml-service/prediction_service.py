@@ -93,14 +93,24 @@ def run_stock_prediction(symbol: str) -> dict:
     }
 
 if __name__ == "__main__":
-    # Test script directly
     import sys
-    test_symbol = sys.argv[1] if len(sys.argv) > 1 else "TCS"
-    print(f"Running prediction pipeline for {test_symbol}...")
-    res = run_stock_prediction(test_symbol)
-    print("Result summary:")
-    print(f"Symbol: {res['symbol']}")
-    print(f"Last Close: ₹{res['lastClosePrice']}")
-    print(f"Predicted Tomorrow Close: ₹{res['linearRegression']['predictedClose']}")
-    print(f"KNN Direction: {res['knn']['prediction']} (Accuracy: {res['knn']['accuracyPercentage']}%)")
-    print(f"LR Metrics: {res['linearRegression']['metrics']}")
+    import json
+    args = [arg for arg in sys.argv[1:] if arg != "--json"]
+    test_symbol = args[0] if args else "TCS"
+    
+    if "--json" in sys.argv:
+        try:
+            res = run_stock_prediction(test_symbol)
+            print(json.dumps(res))
+        except Exception as err:
+            print(json.dumps({"error": str(err)}))
+            sys.exit(1)
+    else:
+        print(f"Running prediction pipeline for {test_symbol}...")
+        res = run_stock_prediction(test_symbol)
+        print("Result summary:")
+        print(f"Symbol: {res['symbol']}")
+        print(f"Last Close: ₹{res['lastClosePrice']}")
+        print(f"Predicted Tomorrow Close: ₹{res['linearRegression']['predictedClose']}")
+        print(f"KNN Direction: {res['knn']['prediction']} (Accuracy: {res['knn']['accuracyPercentage']}%)")
+        print(f"LR Metrics: {res['linearRegression']['metrics']}")

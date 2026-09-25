@@ -8,6 +8,11 @@ const mongoose = require("mongoose");
 let isConnected = false;
 
 const connectDB = async () => {
+  if (mongoose.connection.readyState === 1) {
+    isConnected = true;
+    return;
+  }
+
   const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/stock_ml";
 
   try {

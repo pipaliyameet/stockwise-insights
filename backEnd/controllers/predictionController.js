@@ -6,9 +6,16 @@
 
 const axios = require("axios");
 const Prediction = require("../models/predictionModel");
-const { getDBStatus } = require("../config/db");
+const { getDBStatus, connectDB } = require("../config/db");
 
-const getMlUrl = () => process.env.ML_SERVICE_URL || "http://localhost:5001";
+const getMlUrl = (req) => {
+  if (process.env.ML_SERVICE_URL) return process.env.ML_SERVICE_URL.replace(/\/+$/, "");
+  if (req && req.headers && req.headers.host) {
+    const proto = req.headers["x-forwarded-proto"] || "https";
+    return `${proto}://${req.headers.host}/api/py`;
+  }
+  return "http://localhost:5001";
+};
 
 /**
  * Trigger ML prediction for a stock symbol
@@ -16,6 +23,7 @@ const getMlUrl = () => process.env.ML_SERVICE_URL || "http://localhost:5001";
  */
 const predictStock = async (req, res) => {
   try {
+    await connectDB();
     let { symbol } = req.body;
 
     // Input validation
@@ -30,12 +38,12 @@ const predictStock = async (req, res) => {
 
     // Call Python ML microservice
     let mlResponse;
-    const mlUrl = getMlUrl();
+    const mlUrl = getMlUrl(req);
     try {
       mlResponse = await axios.post(
         `${mlUrl}/predict`,
         { symbol: cleanSymbol },
-        { timeout: 35000 }
+        { timeout: 45000 }
       );
     } catch (mlErr) {
       if (mlErr.response && mlErr.response.data && mlErr.response.data.error) {
@@ -114,6 +122,7 @@ const predictStock = async (req, res) => {
  */
 const getPredictions = async (req, res) => {
   try {
+    await connectDB();
     if (!getDBStatus()) {
       return res.status(503).json({
         success: false,
@@ -145,6 +154,7 @@ const getPredictions = async (req, res) => {
  */
 const getPredictionsBySymbol = async (req, res) => {
   try {
+    await connectDB();
     const { symbol } = req.params;
     if (!getDBStatus()) {
       return res.status(503).json({
@@ -208,8 +218,8 @@ const getStockInfo = async (req, res) => {
     }
 
     const cleanSymbol = symbol.trim().toUpperCase();
-    const mlUrl = getMlUrl();
-    const response = await axios.post(`${mlUrl}/predict`, { symbol: cleanSymbol }, { timeout: 35000 });
+    const mlUrl = getMlUrl(req);
+    const response = await axios.post(`${mlUrl}/predict`, { symbol: cleanSymbol }, { timeout: 45000 });
     const mlData = response.data;
 
     const candles = mlData.historicalData || mlData.chartData || [];
@@ -266,13 +276,14 @@ const getStockInfo = async (req, res) => {
  * GET /api/health
  */
 const getHealth = async (req, res) => {
+  await connectDB();
   const dbConnected = getDBStatus();
   let mlHealthy = false;
   let mlDetails = null;
-  const mlUrl = getMlUrl();
+  const mlUrl = getMlUrl(req);
 
   try {
-    const mlRes = await axios.get(`${mlUrl}/health`, { timeout: 3000 });
+    const mlRes = await axios.get(`${mlUrl}/health`, { timeout: 5000 });
     if (mlRes.status === 200) {
       mlHealthy = true;
       mlDetails = mlRes.data;

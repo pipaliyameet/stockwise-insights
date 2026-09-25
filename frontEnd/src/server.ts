@@ -44,9 +44,18 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
+import { handleApiRequest } from "./lib/api-handler";
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      // 1. Intercept all /api/* requests and serve them via API handler
+      const apiResponse = await handleApiRequest(request);
+      if (apiResponse) {
+        return apiResponse;
+      }
+
+      // 2. Otherwise serve frontend page via TanStack Start SSR
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);

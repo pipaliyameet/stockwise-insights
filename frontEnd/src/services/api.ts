@@ -27,7 +27,10 @@ export const getApiBaseUrl = (): string => {
   if (envUrl && envUrl.trim()) {
     return envUrl.trim().replace(/\/+$/, "");
   }
-  return "http://localhost:5002/api";
+  if (typeof window !== "undefined") {
+    return "/api";
+  }
+  return "/api";
 };
 
 export const API_BASE_URL = getApiBaseUrl();

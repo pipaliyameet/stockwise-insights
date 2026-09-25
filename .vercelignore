@@ -1,0 +1,13 @@
+node_modules
+**/node_modules
+.git
+.output
+.wrangler
+.tanstack
+.lovable
+__pycache__
+**/*.pyc
+.env
+.env.local
+.DS_Store
+**/.DS_Store
