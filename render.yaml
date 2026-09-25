@@ -6,7 +6,7 @@ services:
     name: stockwise-ml
     runtime: python
     plan: free
-    rootDir: backEnd/ml
+    rootDir: ml-service
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn --bind 0.0.0.0:$PORT ml_server:app
     healthCheckPath: /health
@@ -21,7 +21,7 @@ services:
     name: stockwise-api
     runtime: node
     plan: free
-    rootDir: backEnd
+    rootDir: backend
     buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /api/health
@@ -48,7 +48,7 @@ services:
     name: stockwise-frontend
     runtime: node
     plan: free
-    rootDir: frontEnd
+    rootDir: frontend
     buildCommand: npm install && npm run build
     startCommand: npm start
     healthCheckPath: /
