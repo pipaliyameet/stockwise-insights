@@ -107,15 +107,15 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
   }
 
   try {
-    // 1. Health Check: GET /api/health
-    if (pathname === "/api/health" && request.method === "GET") {
+    // 1. Health Checks: GET /api/health and GET /api/py/health
+    if ((pathname === "/api/health" || pathname === "/health") && request.method === "GET") {
       const dbOk = await connectToMongo();
       return new Response(
         JSON.stringify({
           status: "ok",
           backend: {
             status: "online",
-            name: "StockWise Unified Serverless API",
+            name: "StockWise Unified Node & Express API",
             environment: process.env.NODE_ENV || "production",
           },
           database: {
@@ -130,6 +130,38 @@ export async function handleApiRequest(request: Request): Promise<Response | nul
         }),
         { status: 200, headers: corsHeaders }
       );
+    }
+
+    if ((pathname === "/api/py/health" || pathname === "/api/py") && request.method === "GET") {
+      return new Response(
+        JSON.stringify({
+          status: "healthy",
+          service: "Stock ML Engine (Linear Regression & KNN)",
+          algorithms: ["Linear Regression", "K-Nearest Neighbors (KNN)"],
+        }),
+        { status: 200, headers: corsHeaders }
+      );
+    }
+
+    // 1b. Direct ML Prediction: POST /api/py/predict
+    if (pathname === "/api/py/predict" && request.method === "POST") {
+      let body: any = {};
+      try {
+        body = await request.json();
+      } catch {
+        body = {};
+      }
+      const rawSymbol = body.symbol || "";
+      if (!rawSymbol || typeof rawSymbol !== "string" || !rawSymbol.trim()) {
+        return new Response(
+          JSON.stringify({
+            error: "Stock symbol cannot be empty. Please enter a symbol like TCS, RELIANCE, or INFY.",
+          }),
+          { status: 400, headers: corsHeaders }
+        );
+      }
+      const mlData = await executeMlPipeline(rawSymbol.trim().toUpperCase());
+      return new Response(JSON.stringify(mlData), { status: 200, headers: corsHeaders });
     }
 
     // 2. Stock List: GET /api/stocks
