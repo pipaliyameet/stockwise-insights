@@ -298,34 +298,38 @@ function invertMatrix(M: number[][]): number[][] {
   );
 
   for (let i = 0; i < n; i++) {
-    let pivot = A[i]![i]!;
+    let pivot = A[i]?.[i] ?? 0;
     if (Math.abs(pivot) < 1e-9) {
       for (let k = i + 1; k < n; k++) {
-        if (Math.abs(A[k]![i]!) > Math.abs(pivot)) {
+        if (Math.abs(A[k]?.[i] ?? 0) > Math.abs(pivot)) {
           const tempA = A[i]!;
           A[i] = A[k]!;
           A[k] = tempA;
           const tempI = I[i]!;
           I[i] = I[k]!;
           I[k] = tempI;
-          pivot = A[i]![i]!;
+          pivot = A[i]?.[i] ?? 0;
           break;
         }
       }
     }
     if (Math.abs(pivot) < 1e-9) pivot = 1e-4;
 
+    const rowAi = A[i]!;
+    const rowIi = I[i]!;
     for (let j = 0; j < n; j++) {
-      A[i]![j] /= pivot;
-      I[i]![j] /= pivot;
+      rowAi[j] = (rowAi[j] ?? 0) / pivot;
+      rowIi[j] = (rowIi[j] ?? 0) / pivot;
     }
 
     for (let k = 0; k < n; k++) {
       if (k !== i) {
-        const factor = A[k]![i]!;
+        const rowAk = A[k]!;
+        const rowIk = I[k]!;
+        const factor = rowAk[i] ?? 0;
         for (let j = 0; j < n; j++) {
-          A[k]![j] -= factor * A[i]![j]!;
-          I[k]![j] -= factor * I[i]![j]!;
+          rowAk[j] = (rowAk[j] ?? 0) - factor * (rowAi[j] ?? 0);
+          rowIk[j] = (rowIk[j] ?? 0) - factor * (rowIi[j] ?? 0);
         }
       }
     }
@@ -390,7 +394,7 @@ function trainKnnClassifier(
 
   // Evaluate on test set
   let correct = 0;
-  let cm = [
+  const cm: number[][] = [
     [0, 0],
     [0, 0],
   ]; // [[True DOWN, False UP], [False DOWN, True UP]]
@@ -399,10 +403,12 @@ function trainKnnClassifier(
     const pred = classify(X_test_scaled[i]!);
     const actual = y_test[i]!;
     if (pred === actual) correct++;
-    if (actual === 0 && pred === 0) cm[0]![0]! += 1;
-    if (actual === 0 && pred === 1) cm[0]![1]! += 1;
-    if (actual === 1 && pred === 0) cm[1]![0]! += 1;
-    if (actual === 1 && pred === 1) cm[1]![1]! += 1;
+    const row0 = cm[0]!;
+    const row1 = cm[1]!;
+    if (actual === 0 && pred === 0) row0[0] = (row0[0] ?? 0) + 1;
+    if (actual === 0 && pred === 1) row0[1] = (row0[1] ?? 0) + 1;
+    if (actual === 1 && pred === 0) row1[0] = (row1[0] ?? 0) + 1;
+    if (actual === 1 && pred === 1) row1[1] = (row1[1] ?? 0) + 1;
   }
 
   const accuracy = Number((correct / (X_test_scaled.length || 1)).toFixed(4));
