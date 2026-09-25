@@ -1,24 +1,12 @@
 {
   "version": 2,
   "functions": {
-    "api/py/index.py": {
-      "maxDuration": 60,
-      "memory": 1024
-    },
     "api/index.js": {
       "maxDuration": 60,
       "memory": 1024
     }
   },
   "routes": [
-    {
-      "src": "/api/py/(.*)",
-      "dest": "/api/py/index.py"
-    },
-    {
-      "src": "/api/py",
-      "dest": "/api/py/index.py"
-    },
     {
       "src": "/api/(.*)",
       "dest": "/api/index.js"
@@ -36,3 +24,4 @@
     }
   ]
 }
+
